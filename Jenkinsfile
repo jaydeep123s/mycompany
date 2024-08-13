@@ -2,22 +2,20 @@ pipeline {
     agent any
 
     environment {
-        // Define any environment variables here
         APP_NAME = 'my-webserver'
         REPO_URL = 'https://github.com/jaydeep123s/mycompany.git'
+        BRANCH_NAME = 'main' // Update this to the correct branch
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from GitHub
-                git url: "${REPO_URL}"
+                git url: "${REPO_URL}", branch: "${BRANCH_NAME}"
             }
         }
 
         stage('Build') {
             steps {
-                // Build the webserver application (e.g., for Python, you might install dependencies)
                 script {
                     sh 'pip install -r requirements.txt'
                 }
@@ -26,7 +24,6 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Run tests
                 script {
                     sh 'pytest'
                 }
@@ -35,12 +32,11 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // Deploy the application to the EC2 instance
                 script {
                     sh '''
-                    ssh -i ~/.ssh/taTA.pem ubuntu@<EC2_PUBLIC_IP> << EOF
+                    ssh -i ~/.ssh/myname.pem ubuntu@52.39.241.79 << EOF
                     cd /path/to/deploy
-                    git pull origin main
+                    git pull origin ${BRANCH_NAME}
                     sudo systemctl restart nginx
                     EOF
                     '''
@@ -51,7 +47,6 @@ pipeline {
 
     post {
         always {
-            // Archive artifacts or perform cleanup
             echo 'Cleaning up...'
         }
     }
