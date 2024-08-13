@@ -14,10 +14,17 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Setup') {
             steps {
                 script {
-                    sh 'pip3 install -r requirements.txt'
+                    // Create a virtual environment
+                    sh 'python3 -m venv venv'
+                    // Activate the virtual environment and install dependencies
+                    sh '''
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    '''
                 }
             }
         }
@@ -25,7 +32,11 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'pytest'
+                    // Activate the virtual environment and run tests
+                    sh '''
+                    . venv/bin/activate
+                    pytest
+                    '''
                 }
             }
         }
@@ -33,7 +44,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Deploy your application
                     sh '''
+                    . venv/bin/activate
                     ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
                     cd /path/to/deploy
                     git pull origin ${BRANCH_NAME}
