@@ -1,35 +1,20 @@
-# Use a base image with PHP and Apache
-FROM php:7.4-apache
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
 
-# Install any necessary dependencies
-RUN apt-get update \
-    && apt-get install -y apache2 \
-    && rm -rf /var/lib/apt/lists/*
+# Set the working directory in the container
+WORKDIR /app
 
-# Set the working directory inside the container
-WORKDIR /var/www/html
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Copy the necessary files and directories to the container
-COPY index.html /var/www/html
-COPY careers.html /var/www/html
-COPY contactme.php /var/www/html
-COPY composer.lock /var/www/html
-COPY careers.php /var/www/html
-COPY composer.json /var/www/html
-COPY css/ /var/www/html/css/
-COPY images/ /var/www/html/images/
-COPY js/ /var/www/html/js/
-COPY mailing/ /var/www/html/mailing/
-COPY lib/ /var/www/html/lib/
-COPY vendor/ /var/www/html/vendor/
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install any necessary dependencies
-RUN apt-get update \
-    && apt-get install -y libpng-dev \
-    && docker-php-ext-install mysqli pdo pdo_mysql gd
-
-# Expose the container's port (assuming your application runs on port 80)
+# Make port 80 available to the world outside this container
 EXPOSE 80
 
-# Start the Apache server
-CMD ["apache2-foreground"]
+# Define environment variable
+ENV NAME World
+
+# Run app.py when the container launches
+CMD ["python", "app.py"]
