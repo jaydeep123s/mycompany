@@ -17,10 +17,14 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // Create a virtual environment
-                    sh 'python3 -m venv venv'
-                    // Activate the virtual environment and install dependencies
+                    // Install python3-venv if missing
                     sh '''
+                    sudo apt-get update
+                    sudo apt-get install -y python3-venv
+                    '''
+                    // Create and activate a virtual environment
+                    sh '''
+                    python3 -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
@@ -44,7 +48,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Deploy your application
+                    // Activate the virtual environment and deploy
                     sh '''
                     . venv/bin/activate
                     ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
