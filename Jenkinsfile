@@ -1,13 +1,25 @@
+
 pipeline {
     agent any
 
     environment {
         APP_NAME = 'my-webserver'
         REPO_URL = 'https://github.com/jaydeep123s/mycompany.git'
-        BRANCH_NAME = 'main' // Update this to the correct branch
+        BRANCH_NAME = 'main'
     }
 
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    sh '''
+                    sudo apt-get update
+                    sudo apt-get install -y python3-pip
+                    '''
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git url: "${REPO_URL}", branch: "${BRANCH_NAME}"
@@ -17,7 +29,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'pip install -r requirements.txt'
+                    sh 'pip3 install -r requirements.txt'
                 }
             }
         }
@@ -34,7 +46,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    ssh -i ~/.ssh/myname.pem ubuntu@52.39.241.79 << EOF
+                    ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
                     cd /path/to/deploy
                     git pull origin ${BRANCH_NAME}
                     sudo systemctl restart nginx
