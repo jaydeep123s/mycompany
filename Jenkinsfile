@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -9,17 +8,6 @@ pipeline {
     }
 
     stages {
-        stage('Setup') {
-            steps {
-                script {
-                    sh '''
-                    sudo apt-get update
-                    sudo apt-get install -y python3-pip
-                    '''
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git url: "${REPO_URL}", branch: "${BRANCH_NAME}"
