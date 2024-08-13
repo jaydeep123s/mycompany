@@ -16,29 +16,44 @@ pipeline {
 
         stage('Setup') {
             steps {
-                // Install dependencies using apt
-                sh 'sudo apt-get update'
-                sh 'sudo apt-get install -y python3-pip'
-                // Install Python dependencies
-                sh 'pip3 install -r requirements.txt'
+                script {
+                    // Create a virtual environment
+                    sh 'python3 -m venv venv'
+                    // Activate the virtual environment and install dependencies
+                    sh '''
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    '''
+                }
             }
         }
 
         stage('Test') {
             steps {
-                sh 'pytest'
+                script {
+                    // Activate the virtual environment and run tests
+                    sh '''
+                    . venv/bin/activate
+                    pytest
+                    '''
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                sh '''
-                ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
-                cd /path/to/deploy
-                git pull origin ${BRANCH_NAME}
-                sudo systemctl restart nginx
-                EOF
-                '''
+                script {
+                    // Deploy your application
+                    sh '''
+                    . venv/bin/activate
+                    ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
+                    cd /path/to/deploy
+                    git pull origin ${BRANCH_NAME}
+                    sudo systemctl restart nginx
+                    EOF
+                    '''
+                }
             }
         }
     }
