@@ -1,70 +1,36 @@
 pipeline {
     agent any
-
-    environment {
-        APP_NAME = 'my-webserver'
-        REPO_URL = 'https://github.com/jaydeep123s/mycompany.git'
-        BRANCH_NAME = 'main'
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                git url: "${REPO_URL}", branch: "${BRANCH_NAME}"
-            }
-        }
-
-        stage('Setup') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Install python3-venv if missing
-                    sh '''
-                    sudo apt-get update
-                    sudo apt-get install -y python3-venv
-                    '''
-                    // Create and activate a virtual environment
-                    sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    '''
+                    // Build Docker image
+                    def app = docker.build("my-webapp")
                 }
             }
         }
-
         stage('Test') {
             steps {
                 script {
-                    // Activate the virtual environment and run tests
-                    sh '''
-                    . venv/bin/activate
-                    pytest
-                    '''
+                    // Test Docker image
+                    sh 'docker run --rm my-webapp python -m unittest discover'
                 }
             }
         }
-
-        stage('Deploy') {
+        stage('Deploy to EC2') {
             steps {
                 script {
-                    // Activate the virtual environment and deploy
+                    // Push Docker image to Docker Hub
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials-id') {
+                        app.push('latest')
+                    }
+                    
+                    // SSH to EC2 and deploy
                     sh '''
-                    . venv/bin/activate
-                    ssh -i ~/.ssh/your-key.pem ubuntu@52.39.241.79 << EOF
-                    cd /path/to/deploy
-                    git pull origin ${BRANCH_NAME}
-                    sudo systemctl restart nginx
-                    EOF
+                        ssh -i /path/to/your/key.pem ec2-user@your-ec2-public-ip "docker pull my-webapp:latest && docker run -d -p 80:80 my-webapp:latest"
                     '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Cleaning up...'
         }
     }
 }
